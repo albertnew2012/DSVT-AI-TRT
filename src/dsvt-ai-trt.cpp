@@ -11,7 +11,7 @@
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 #include "cuda_runtime_api.h"
-
+#include <filesystem>
 #include "logging.h"
 #include "params.h"
 #include "points2Features.h"
@@ -1876,6 +1876,24 @@ int main(int argc, char** argv) {
 
     std::string Data_File = "../data/bin/";
     std::string save_root = "../data/outputs/";
+    
+    // Check if the directory exists
+    if (std::filesystem::exists(save_root)) {
+        // Directory exists, remove all contents
+        for (const auto& entry : std::filesystem::directory_iterator(save_root)) {
+            std::filesystem::remove_all(entry.path());  // Removes files and directories
+        }
+        std::cout << "All contents of the directory have been deleted." << std::endl;
+    } else {
+        // Create the directory if it does not exist
+        if (std::filesystem::create_directories(save_root)) {
+            std::cout << "Directory created successfully." << std::endl;
+        } else {
+            std::cout << "Failed to create directory." << std::endl;
+        }
+    }
+
+
 
     std::vector<Bndbox> nms_pred;
     nms_pred.reserve(100);
