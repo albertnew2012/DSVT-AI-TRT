@@ -6,9 +6,12 @@ add_definitions(-std=c++17)
 
 option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_BUILD_TYPE Debug)
+# # set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
 set(CMAKE_BUILD_TYPE Debug)
-# set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 
 find_package(CUDA REQUIRED)
 # # set(CUDA_NVCC_FLAGS -G;-g)

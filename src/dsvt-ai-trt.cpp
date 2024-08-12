@@ -542,7 +542,7 @@ ICudaEngine* createEngine(unsigned int maxBatchSize, IBuilder* builder, IBuilder
     assert(point_size);
     // return;
 
-    std::map<std::string, Weights> weightMap = loadWeights_new("../dsvt.wts");
+    std::map<std::string, Weights> weightMap = loadWeights_new("dsvt.wts");
     std::cout << "load weights finished" << std::endl;
 
 
@@ -1874,8 +1874,8 @@ int main(int argc, char** argv) {
     // float * coors = (float *)malloc(coors_byte_size);
     unsigned int voxel_num = 0;
 
-    std::string Data_File = "../data/bin/";
-    std::string save_root = "../data/outputs/";
+    std::string Data_File = "data/bin/";
+    std::string save_root = "data/outputs/";
     
     // Check if the directory exists
     if (std::filesystem::exists(save_root)) {

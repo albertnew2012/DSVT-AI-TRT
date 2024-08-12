@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "clean_build",
+        "type": "shell",
+        "command": "sh",
+        "args": [
+          "-c",
+          "mkdir -p build && rm -rf build/* && cd build && cmake .. && cmake --build ."
+        ],
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        }
+      }
+    ]
+  }
+ 
