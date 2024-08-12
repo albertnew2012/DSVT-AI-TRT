@@ -3,3 +3,4 @@ data/outputs/
 *.wts
 *.engine
 *.trt
+*.bin

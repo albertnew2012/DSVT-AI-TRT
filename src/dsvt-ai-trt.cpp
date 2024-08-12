@@ -1899,7 +1899,7 @@ int main(int argc, char** argv) {
     nms_pred.reserve(100);
     std::vector<Bndbox> res_;
 
-    for (int i = 0; i <10; i++) //7481   5
+    for (int i = 1; i <30; i++) //7481   5
     {
         std::cout << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
         std::string dataFile = Data_File;
