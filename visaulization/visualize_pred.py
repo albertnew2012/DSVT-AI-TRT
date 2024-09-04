@@ -1,12 +1,21 @@
 import numpy as np
 import open3d as o3d
-import os 
+import os
 import warnings
 
 
 print(os.getcwd())
 
-def load_label(label_path:str):
+colors = [
+    [1, 1, 0],  # cone: yellow
+    [1, 0, 0],  # vehicle: red
+    [0, 0, 1],  # human: blue
+    [0, 1, 0]  # cone: yellow
+]
+
+
+
+def load_label(label_path: str):
     annotation_file = open(label_path, 'r')
     bboxes = []
     lines = annotation_file.readlines()
@@ -30,10 +39,10 @@ def load_label(label_path:str):
     return bboxes
 
 
-def load_bin(bin_path:str):
+def load_bin(bin_path: str):
     with open(bin_path, 'rb') as f:
         points = np.fromfile(f, dtype=np.float32)
-    points = points.reshape(-1,4)
+    points = points.reshape(-1, 4)
     return points
 
 
@@ -48,6 +57,45 @@ def create_bounding_box(center, extent, yaw):
     return bbox
 
 
+def filter_bounding_boxes(point_cloud, bounding_boxes, min_points_threshold=50):
+    """
+    Filters out bounding boxes with fewer points than the specified threshold.
+    
+    Args:
+    - point_cloud (o3d.geometry.PointCloud): The original point cloud data.
+    - bounding_boxes (list of dict): List of predicted bounding boxes, each containing 'center', 'size', and 'rotation'.
+    - min_points_threshold (int): The minimum number of points required to keep a bounding box.
+    
+    Returns:
+    - filtered_bounding_boxes (list of dict): The filtered list of bounding boxes.
+    """
+    filtered_bounding_boxes = []
+
+    # Convert the point cloud to a NumPy array
+    points = np.asarray(point_cloud.points)
+
+    for bbox in bounding_boxes:
+        # Extract bounding box parameters
+        center = bbox['center']
+        size = bbox['size']  # [width, length, height]
+        rotation = bbox['rotation']  # Assume rotation is around the Z-axis
+
+        # Create an oriented bounding box in Open3D
+        oriented_bbox = o3d.geometry.OrientedBoundingBox(center, 
+                                                         o3d.geometry.OrientedBoundingBox.get_rotation_matrix_from_xyz([0, 0, rotation]), 
+                                                         size)
+        
+        # Get indices of points inside the bounding box
+        indices = oriented_bbox.get_point_indices_within_bounding_box(points)
+        num_points_in_bbox = len(indices)
+
+        # Check if the number of points meets the threshold
+        if num_points_in_bbox >= min_points_threshold:
+            filtered_bounding_boxes.append(bbox)
+
+    return filtered_bounding_boxes
+
+
 def visualize(points: np.array, boxes: np.array, labels=None):
     # create pcd object
     pcd = o3d.geometry.PointCloud()
@@ -57,14 +105,30 @@ def visualize(points: np.array, boxes: np.array, labels=None):
         center = box[:3]
         extent = box[3:6]
         yaw = box[6]  # assuming yaw is provided in the boxes array
+
+        # Create an oriented bounding box in Open3D
+        oriented_bbox = o3d.geometry.OrientedBoundingBox(center, 
+                                                         o3d.geometry.OrientedBoundingBox.get_rotation_matrix_from_xyz([0, 0, yaw]), 
+                                                         extent)
+
+        # Get indices of points inside the bounding box
+        indices = oriented_bbox.get_point_indices_within_bounding_box(pcd.points)
+        num_points_in_bbox = len(indices)
+        print(f"number of points in the box: {num_points_in_bbox}")
+
+        # Check if the number of points meets the threshold
+        if num_points_in_bbox < 40:
+            continue
+
         bbox = create_bounding_box(center, extent, yaw)
         if labels is not None:
             # Set bounding box color based on label
             bbox.color = colors[labels[i]-1]
+        else:
+            bbox.color = [1,0,0]
         geometries.append(bbox)
     # Visualize point cloud
     o3d.visualization.draw_geometries(geometries)
-
 
 
 # def draw_visualization(points, bboxes):
@@ -117,23 +181,22 @@ def visualize(points: np.array, boxes: np.array, labels=None):
     # all_geometries = [pcd] + entities_to_draw
     # o3d.visualization.draw_geometries(all_geometries)
 
-# # visualize a single frame 
+# # visualize a single frame
 # points = load_bin('data/bin/000000.bin')
 # bboxes = load_label('data/outputs/000000.txt')
 # draw_visualization(points, bboxes)
-
 # visualize all frames
 bin_ROOT = "data/bin"
 output_ROOT = "data/outputs"
 for bin_file in sorted(os.listdir(bin_ROOT)):
     points = load_bin(os.path.join(bin_ROOT, bin_file))
     label_file_name = bin_file.split('.')[0] + '.txt'
-    if os.path.exists(os.path.join(output_ROOT,label_file_name)):
-        bboxes = load_label(os.path.join(output_ROOT,label_file_name))
+    if os.path.exists(os.path.join(output_ROOT, label_file_name)):
+        bboxes = load_label(os.path.join(output_ROOT, label_file_name))
         print(f"==========visualize frame {bin_file}=============")
         visualize(points, bboxes)
     else:
-        warnings.warn(f"output lable for file {os.path.join(bin_ROOT, bin_file)} is not found!", UserWarning)
+        warnings.warn(
+            f"output lable for file {os.path.join(bin_ROOT, bin_file)} is not found!", UserWarning)
 
-# 
-
+#
